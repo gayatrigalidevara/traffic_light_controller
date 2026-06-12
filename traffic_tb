@@ -1,0 +1,55 @@
+`timescale 1ns / 1ps
+
+module traffic_controller_tb;
+
+    // Inputs
+    reg clk;
+    reg rst;
+
+    // Outputs
+    wire [2:0] main_st;
+    wire [2:0] cross_st;
+    wire [4:0] light_count;
+
+    // Instantiate the Unit Under Test (UUT)
+    traffic_controller uut (
+        .clk(clk), 
+        .rst(rst), 
+        .main_st(main_st), 
+        .cross_st(cross_st), 
+        .light_count(light_count)
+    );
+
+    // Clock generation (1Hz simulation interval, e.g., 10ns period representing 1 second steps)
+    always begin
+        #5 clk = ~clk;
+    end
+
+    // Monitor changes in states and counts
+    initial begin
+        $monitor("Time=%0dt rst=%b light_count=%0d | main_st(R-Y-G)=%b cross_st(R-Y-G)=%b", 
+                 $time, rst, light_count, main_st, cross_st);
+    end
+
+    initial begin
+        // Initialize Inputs
+        clk = 0;
+        rst = 0;
+
+        // Apply reset signal
+        #10 rst = 1;
+        #10 rst = 0;
+        
+        // Run long enough to watch the full 32-second sequence loop twice
+        // (32 seconds * 10ns per clock cycle = 320ns per cycle)
+        #700;
+
+        // Apply a mid-cycle reset to ensure the controller resets correctly
+        #20 rst = 1;
+        #10 rst = 0;
+        
+        #100;
+        $finish;
+    end
+      
+endmodule
